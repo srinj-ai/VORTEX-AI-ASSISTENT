@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VORTEX AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">VORTEX AI</p>
+          <h1>AI Chat</h1>
+        </div>
+
+        <label class="field">
+          <span>Model</span>
+          <select id="modelSelect"></select>
+        </label>
+
+        <button id="clearButton" class="secondary-button" type="button">Clear chat</button>
+      </aside>
+
+      <section class="chat-panel" aria-label="Chat">
+        <div id="messages" class="messages"></div>
+
+        <form id="chatForm" class="composer">
+          <textarea
+            id="messageInput"
+            rows="1"
+            placeholder="Type a message..."
+            autocomplete="off"
+          ></textarea>
+          <button id="sendButton" type="submit">Send</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

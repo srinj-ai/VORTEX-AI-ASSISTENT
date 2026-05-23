@@ -29,7 +29,7 @@ def print_key_hint() -> None:
 
 
 def main() -> None:
-    print("CloudCaesar CLI")
+    print("VORTEX AI CLI")
     print("Type exit or quit to leave. Type clear to reset chat history.\n")
 
     model_name, model_id = choose_model()

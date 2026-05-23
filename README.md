@@ -1,95 +1,113 @@
-# CloudCaesar
+# VORTEX AI
 
-An AI chatbot built with Streamlit. Supports multiple AI models (e.g., Llama, GPT) and a beautiful, responsive UI. 
+An AI chatbot with a pure Python CLI and a FastAPI text API. It uses free OpenRouter model IDs from `models.csv`.
 
-**This Chatbot is deployed at Streamlit Cloud:** https://cloudcaesar.streamlit.app
-
-**Note:** This version is text-only and can be deployed on [Streamlit Community Cloud](https://streamlit.io/cloud).
-
----
-<p align=center>
+<p align="center">
   <img src="CloudCaesar-img.png">
 </p>
----
 
 ## Features
-- Chat with various AI models (selectable in the sidebar)
-- Clean, modern UI with markdown/code formatting
-- Persistent conversation history (per session)
-- Easy to deploy on Streamlit Cloud
 
----
+- Chat with selectable free OpenRouter models
+- Pure Python terminal chat
+- FastAPI backend with interactive API docs
+- Local `.env` support for private API keys
+- Open-source friendly setup with `.env.example`
 
 ## Setup
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/your-username/your-repo-name.git
 cd your-repo-name
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Add Your AI Model Keys (if needed)
-- Copy `.env.example` to `.env`.
-- Add your real OpenRouter API key to `.env`:
+### 3. Add Your API Key
+
+Copy `.env.example` to `.env`.
+
+Add your real OpenRouter API key to `.env`:
+
 ```env
 OPENROUTER_API_KEY=your_real_key_here
 ```
-- Never commit `.env`. It is ignored by Git so your private key stays local.
+
+Never commit `.env`. It is ignored by Git so your private key stays local.
 
 ### 4. Run Locally
+
 Pure Python CLI:
+
 ```bash
 python cli.py
 ```
 
-Streamlit UI:
+FastAPI text API:
+
 ```bash
-streamlit run app.py
+uvicorn api:app --reload
 ```
 
----
+Then open:
 
-## Deploy on Streamlit Cloud
-1. Push your code to GitHub.
-2. Go to [Streamlit Cloud](https://streamlit.io/cloud) and connect your repo.
-3. Set any required secrets (API keys, etc.) in the Streamlit Cloud UI.
-4. Click **Deploy**.
+```text
+http://127.0.0.1:8000/docs
+```
 
----
+## API Endpoints
+
+```text
+GET /
+GET /models
+POST /chat
+```
+
+Example `/chat` body:
+
+```json
+{
+  "model": "openai/gpt-oss-20b:free",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello"
+    }
+  ]
+}
+```
 
 ## File Structure
-```
-├── app.py                # Main Streamlit app
-├── requirements.txt      # Python dependencies
-├── utils/
-│   └── ai_models.py      # Model selection and response logic
-├── .gitignore
-└── README.md
-```
 
----
+```text
+api.py              # FastAPI text API
+cli.py              # Pure Python terminal chat
+models.csv          # Free model list
+requirements.txt    # Python dependencies
+utils/ai_models.py  # Model loading and OpenRouter response logic
+.env.example        # Public API key template
+.gitignore          # Keeps local secrets out of Git
+README.md
+```
 
 ## Customization
-- To add or change models, edit `utils/ai_models.py` and `models.csv` (if used).
-- To change UI, edit `app.py` (Streamlit widgets and CSS).
 
----
+- To add or change models, edit `models.csv`.
+- To change API behavior, edit `api.py`.
+- To change terminal behavior, edit `cli.py`.
 
 ## License
+
 MIT License
 
----
-
 ## Credits
-- Website built with [Streamlit](https://streamlit.io/)
+
+- API built with [FastAPI](https://fastapi.tiangolo.com/)
 - APIs supplied by [OpenRouter](https://openrouter.ai)
 - AI model integration by [Utkarsh Gyan](https://github.com/UTGyan7)
-
----
-
-⚡ Built by [Utkarsh Gyan](https://github.com/UTGyan7) — I build fast & freelance small gigs too. DM me!
