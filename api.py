@@ -31,6 +31,33 @@ class ChatResponse(BaseModel):
     reply: str
 
 
+def friendly_error(raw_error: str) -> tuple[int, str]:
+    error_text = raw_error.lower()
+
+    if "429" in error_text or "rate-limited" in error_text or "rate limit" in error_text:
+        return (
+            429,
+            "This free model is busy or rate-limited right now. Try another model or retry shortly.",
+        )
+
+    if "api key" in error_text:
+        return (
+            401,
+            "API key not found or not accepted. Check your local .env file.",
+        )
+
+    if "connection error" in error_text:
+        return (
+            503,
+            "Could not reach the AI provider. Check your internet connection and try again.",
+        )
+
+    return (
+        502,
+        "The selected model could not answer right now. Try another model or retry shortly.",
+    )
+
+
 @app.get("/")
 def home() -> FileResponse:
     return FileResponse("web/index.html")
@@ -60,6 +87,7 @@ def chat(request: ChatRequest) -> ChatResponse:
     reply = generate_response(request.model, messages)
 
     if reply.startswith("Error generating response:"):
-        raise HTTPException(status_code=502, detail=reply)
+        status_code, detail = friendly_error(reply)
+        raise HTTPException(status_code=status_code, detail=detail)
 
     return ChatResponse(reply=reply)

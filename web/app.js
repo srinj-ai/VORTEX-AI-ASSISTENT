@@ -76,7 +76,7 @@ async function sendMessage(prompt) {
     const data = await response.json();
     messages[thinkingIndex].content = response.ok
       ? data.reply
-      : data.detail || "Request failed.";
+      : data.detail || "The selected model could not answer right now.";
   } catch (error) {
     messages[thinkingIndex].content = error.message;
   } finally {
