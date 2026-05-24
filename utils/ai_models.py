@@ -62,7 +62,12 @@ def load_models():
 # Get available models
 AVAILABLE_MODELS = load_models()
 
-def generate_response(model_id: str, messages: List[Dict]) -> str:
+def generate_response(
+    model_id: str,
+    messages: List[Dict],
+    temperature: float = 0.7,
+    max_tokens: int = 1000,
+) -> str:
     """
     Generate a response from the selected AI model.
     
@@ -77,13 +82,13 @@ def generate_response(model_id: str, messages: List[Dict]) -> str:
         client = get_client()
         response = client.chat.completions.create(
             extra_headers={
-                "HTTP-Referer": "https://github.com/UTGyan7/CloudCaesar", # Optional. Site URL for rankings on openrouter.ai.
-                "X-Title": "CloudCaesar" # Optional. Site title for rankings on openrouter.ai.
+                "HTTP-Referer": "https://github.com/UTGyan7/VORTEX-AI",
+                "X-Title": "VORTEX AI",
             },
             model=model_id,
             messages=messages,
-            temperature=0.7,
-            max_tokens=1000
+            temperature=temperature,
+            max_tokens=max_tokens
         )
         return response.choices[0].message.content
     except Exception as e:

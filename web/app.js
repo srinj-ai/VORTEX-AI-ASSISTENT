@@ -1,11 +1,21 @@
 const modelSelect = document.querySelector("#modelSelect");
+const sessionModel = document.querySelector("#sessionModel");
 const messagesEl = document.querySelector("#messages");
 const chatForm = document.querySelector("#chatForm");
 const messageInput = document.querySelector("#messageInput");
 const sendButton = document.querySelector("#sendButton");
+const micButton = document.querySelector(".mic-button");
 const clearButton = document.querySelector("#clearButton");
+const temperatureInput = document.querySelector("#temperatureInput");
+const temperatureValue = document.querySelector("#temperatureValue");
+const maxTokensInput = document.querySelector("#maxTokensInput");
+const maxTokensValue = document.querySelector("#maxTokensValue");
 
+const systemPrompt = "You are VORTEX AI, a helpful, concise assistant. You were developed by Srinjoy Das and Utkarsh Gyan and designed by Pratyush Roy.";
 const messages = [];
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+let isListening = false;
 
 function addMessage(role, content) {
   messages.push({ role, content });
@@ -48,6 +58,68 @@ async function loadModels() {
     option.textContent = model.name;
     modelSelect.appendChild(option);
   }
+
+  updateSessionModel();
+}
+
+function updateSessionModel() {
+  const selected = modelSelect.options[modelSelect.selectedIndex];
+  sessionModel.textContent = selected ? selected.textContent : "Select a model";
+}
+
+function updateTemperatureValue() {
+  temperatureValue.textContent = Number(temperatureInput.value).toFixed(1);
+}
+
+function updateMaxTokensValue() {
+  maxTokensValue.textContent = maxTokensInput.value;
+}
+
+function resizeComposer() {
+  messageInput.style.height = "auto";
+  messageInput.style.height = `${messageInput.scrollHeight}px`;
+}
+
+function setListeningState(nextIsListening) {
+  isListening = nextIsListening;
+  micButton.classList.toggle("listening", isListening);
+  micButton.setAttribute("aria-pressed", String(isListening));
+  micButton.title = isListening ? "Stop voice input" : "Start voice input";
+}
+
+function appendTranscript(transcript) {
+  const separator = messageInput.value.trim() ? " " : "";
+  messageInput.value = `${messageInput.value}${separator}${transcript.trim()}`;
+  resizeComposer();
+  messageInput.focus();
+}
+
+function setupVoiceInput() {
+  if (!SpeechRecognition) {
+    micButton.disabled = true;
+    micButton.title = "Voice input is not supported in this browser.";
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = "en-US";
+
+  recognition.addEventListener("result", (event) => {
+    const result = event.results[event.results.length - 1];
+    appendTranscript(result[0].transcript);
+  });
+
+  recognition.addEventListener("end", () => {
+    setListeningState(false);
+  });
+
+  recognition.addEventListener("error", () => {
+    setListeningState(false);
+  });
+
+  setListeningState(false);
 }
 
 async function sendMessage(prompt) {
@@ -64,12 +136,17 @@ async function sendMessage(prompt) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: modelSelect.value,
-        messages: messages
-          .filter((message) => message.content !== "Thinking...")
-          .map((message) => ({
-            role: message.role,
-            content: message.content,
-          })),
+        temperature: Number(temperatureInput.value),
+        max_tokens: Number(maxTokensInput.value),
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages
+            .filter((message) => message.content !== "Thinking...")
+            .map((message) => ({
+              role: message.role,
+              content: message.content,
+            })),
+        ],
       }),
     });
 
@@ -99,8 +176,7 @@ chatForm.addEventListener("submit", (event) => {
 });
 
 messageInput.addEventListener("input", () => {
-  messageInput.style.height = "auto";
-  messageInput.style.height = `${messageInput.scrollHeight}px`;
+  resizeComposer();
 });
 
 messageInput.addEventListener("keydown", (event) => {
@@ -116,7 +192,29 @@ clearButton.addEventListener("click", () => {
   messageInput.focus();
 });
 
+micButton.addEventListener("click", () => {
+  if (!recognition) {
+    return;
+  }
+
+  if (isListening) {
+    recognition.stop();
+    setListeningState(false);
+    return;
+  }
+
+  recognition.start();
+  setListeningState(true);
+});
+
+modelSelect.addEventListener("change", updateSessionModel);
+temperatureInput.addEventListener("input", updateTemperatureValue);
+maxTokensInput.addEventListener("input", updateMaxTokensValue);
+
 renderMessages();
+updateTemperatureValue();
+updateMaxTokensValue();
+setupVoiceInput();
 loadModels().catch((error) => {
   addMessage("system", error.message);
 });

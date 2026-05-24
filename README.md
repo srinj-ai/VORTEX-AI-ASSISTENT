@@ -3,7 +3,7 @@
 An AI chatbot with a pure Python CLI and a FastAPI text API. It uses free OpenRouter model IDs from `models.csv`.
 
 <p align="center">
-  <img src="CloudCaesar-img.png">
+  <img src="web/assets/vortex-logo.jpeg" alt="VORTEX AI">
 </p>
 
 ## Features

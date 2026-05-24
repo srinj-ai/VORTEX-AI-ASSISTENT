@@ -9,30 +9,69 @@
   <body>
     <main class="app-shell">
       <aside class="sidebar">
-        <div>
-          <p class="eyebrow">VORTEX AI</p>
-          <h1>AI Chat</h1>
+        <div class="brand">
+          <img class="brand-image" src="/static/assets/vortex-logo.png" alt="VORTEX AI">
         </div>
 
         <label class="field">
-          <span>Model</span>
+          <span>Select model</span>
           <select id="modelSelect"></select>
         </label>
+
+        <label class="field range-field">
+          <span>Temperature <strong id="temperatureValue">0.7</strong></span>
+          <input
+            id="temperatureInput"
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            value="0.7"
+          >
+        </label>
+
+        <label class="field range-field">
+          <span>Max tokens <strong id="maxTokensValue">1000</strong></span>
+          <input
+            id="maxTokensInput"
+            type="range"
+            min="100"
+            max="4000"
+            step="100"
+            value="1000"
+          >
+        </label>
+
+        <nav class="mode-list" aria-label="Modes">
+          <button class="mode-button active" type="button">Chat Mode</button>
+          <button class="mode-button" type="button" disabled>Voice Mode</button>
+        </nav>
 
         <button id="clearButton" class="secondary-button" type="button">Clear chat</button>
       </aside>
 
       <section class="chat-panel" aria-label="Chat">
+        <header class="session-bar">
+          <span>Session:</span>
+          <strong id="sessionModel">Select a model</strong>
+          <button class="dots-button" type="button" aria-label="More options">...</button>
+        </header>
+
         <div id="messages" class="messages"></div>
 
         <form id="chatForm" class="composer">
+          <div class="composer-actions" aria-hidden="true">
+            <span>+</span>
+            <span>Tools</span>
+          </div>
           <textarea
             id="messageInput"
             rows="1"
             placeholder="Type a message..."
             autocomplete="off"
           ></textarea>
-          <button id="sendButton" type="submit">Send</button>
+          <button class="mic-button" type="button" aria-label="Voice input">Mic</button>
+          <button id="sendButton" class="send-button" type="submit" aria-label="Send message">Send</button>
         </form>
       </section>
     </main>
