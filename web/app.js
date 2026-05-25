@@ -76,8 +76,7 @@ function updateMaxTokensValue() {
 }
 
 function resizeComposer() {
-  messageInput.style.height = "auto";
-  messageInput.style.height = `${messageInput.scrollHeight}px`;
+  messageInput.style.height = "";
 }
 
 function setListeningState(nextIsListening) {
