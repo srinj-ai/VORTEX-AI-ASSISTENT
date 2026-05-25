@@ -19,8 +19,8 @@ An AI chatbot with a pure Python CLI and a FastAPI text API. It uses free OpenRo
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/srinj-ai/VORTEX-AI
+cd VORTEX-AI
 ```
 
 ### 2. Install Dependencies
