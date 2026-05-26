@@ -10,12 +10,27 @@ const temperatureInput = document.querySelector("#temperatureInput");
 const temperatureValue = document.querySelector("#temperatureValue");
 const maxTokensInput = document.querySelector("#maxTokensInput");
 const maxTokensValue = document.querySelector("#maxTokensValue");
+const chatModeButton = document.querySelector("#chatModeButton");
+const voiceModeButton = document.querySelector("#voiceModeButton");
+const voicePanel = document.querySelector("#voicePanel");
+const voiceListenButton = document.querySelector("#voiceListenButton");
+const voiceListenLabel = document.querySelector("#voiceListenLabel");
+const voiceStatusText = document.querySelector("#voiceStatusText");
+const voiceTranscriptText = document.querySelector("#voiceTranscriptText");
+const voiceAutoSpeakToggle = document.querySelector("#voiceAutoSpeakToggle");
+const voiceSupportHint = document.querySelector("#voiceSupportHint");
+const chatPanel = document.querySelector(".chat-panel");
+const voiceWave = document.querySelector("#voiceWave");
 
 const systemPrompt = "You are VORTEX AI, a helpful, concise assistant. You were developed by Srinjoy Das and Utkarsh Gyan and designed by Pratyush Roy.";
 const messages = [];
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition;
-let isListening = false;
+let chatRecognition;
+let voiceRecognition;
+let isChatListening = false;
+let isVoiceListening = false;
+let activeMode = "chat"; // "chat" | "voice"
+let isSpeaking = false;
 
 function addMessage(role, content) {
   messages.push({ role, content });
@@ -79,11 +94,19 @@ function resizeComposer() {
   messageInput.style.height = "";
 }
 
-function setListeningState(nextIsListening) {
-  isListening = nextIsListening;
-  micButton.classList.toggle("listening", isListening);
-  micButton.setAttribute("aria-pressed", String(isListening));
-  micButton.title = isListening ? "Stop voice input" : "Start voice input";
+function setChatListeningState(nextIsListening) {
+  isChatListening = nextIsListening;
+  micButton.classList.toggle("listening", isChatListening);
+  micButton.setAttribute("aria-pressed", String(isChatListening));
+  micButton.title = isChatListening ? "Stop voice input" : "Start voice input";
+}
+
+function setVoiceListeningState(nextIsListening) {
+  isVoiceListening = nextIsListening;
+  voiceListenButton.classList.toggle("listening", isVoiceListening);
+  voiceListenButton.setAttribute("aria-pressed", String(isVoiceListening));
+  voiceListenLabel.textContent = isVoiceListening ? "Stop listening" : "Start listening";
+  voiceStatusText.textContent = isVoiceListening ? "Listening…" : "Idle";
 }
 
 function appendTranscript(transcript) {
@@ -93,35 +116,186 @@ function appendTranscript(transcript) {
   messageInput.focus();
 }
 
-function setupVoiceInput() {
+function setupVoiceWave() {
+  if (!voiceWave) return;
+
+  const totalBars = 46;
+  const minHeight = 18;
+  const maxHeight = 92;
+
+  for (let index = 0; index < totalBars; index += 1) {
+    const bar = document.createElement("span");
+    bar.className = "voice-wave-bar";
+
+    const midpoint = (totalBars - 1) / 2;
+    const distance = Math.abs(index - midpoint) / midpoint;
+    const profile = 1 - Math.pow(distance, 1.2);
+    const height = Math.round(minHeight + (maxHeight - minHeight) * profile);
+    const duration = 680 + Math.round(Math.random() * 420);
+    const delay = -Math.round(Math.random() * 900);
+
+    bar.style.height = `${height}px`;
+    bar.style.animationDuration = `${duration}ms`;
+    bar.style.animationDelay = `${delay}ms`;
+    voiceWave.appendChild(bar);
+  }
+}
+
+function setWaveSpeakingState(isActive) {
+  if (!voiceWave) return;
+  voiceWave.classList.toggle("speaking", isActive);
+}
+
+function buildRecognition({ onTranscript, onEnd }) {
+  const instance = new SpeechRecognition();
+  instance.continuous = false;
+  instance.interimResults = false;
+  instance.lang = "en-US";
+
+  instance.addEventListener("result", (event) => {
+    const result = event.results[event.results.length - 1];
+    const transcript = (result && result[0] && result[0].transcript) ? result[0].transcript : "";
+    if (transcript) {
+      onTranscript(transcript);
+    }
+  });
+
+  instance.addEventListener("end", () => {
+    onEnd();
+  });
+
+  instance.addEventListener("error", () => {
+    onEnd();
+  });
+
+  return instance;
+}
+
+function stopAllRecognition() {
+  try { chatRecognition && chatRecognition.stop(); } catch {}
+  try { voiceRecognition && voiceRecognition.stop(); } catch {}
+  setChatListeningState(false);
+  setVoiceListeningState(false);
+}
+
+function stopSpeaking() {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+  } catch {}
+  isSpeaking = false;
+  setWaveSpeakingState(false);
+}
+
+function speak(text, { onEnd } = {}) {
+  if (!("speechSynthesis" in window)) return;
+  if (!text || !text.trim()) return;
+
+  stopSpeaking();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  utterance.addEventListener("start", () => {
+    isSpeaking = true;
+    voiceStatusText.textContent = "Speaking…";
+    setWaveSpeakingState(true);
+  });
+
+  utterance.addEventListener("end", () => {
+    isSpeaking = false;
+    setWaveSpeakingState(false);
+    if (activeMode === "voice") {
+      voiceStatusText.textContent = isVoiceListening ? "Listening…" : "Idle";
+    }
+    if (onEnd) onEnd();
+  });
+
+  utterance.addEventListener("error", () => {
+    isSpeaking = false;
+    setWaveSpeakingState(false);
+    if (activeMode === "voice") {
+      voiceStatusText.textContent = "Idle";
+    }
+    if (onEnd) onEnd();
+  });
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function setupVoiceAndChatInput() {
   if (!SpeechRecognition) {
     micButton.disabled = true;
     micButton.title = "Voice input is not supported in this browser.";
+    voiceListenButton.disabled = true;
+    voiceSupportHint.textContent = "Voice input not supported in this browser.";
     return;
   }
 
-  recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = "en-US";
+  if (!("speechSynthesis" in window)) {
+    voiceSupportHint.textContent = "Speaker output not supported in this browser.";
+    voiceAutoSpeakToggle.checked = false;
+    voiceAutoSpeakToggle.disabled = true;
+  } else {
+    voiceSupportHint.textContent = "Uses free browser speech APIs.";
+  }
 
-  recognition.addEventListener("result", (event) => {
-    const result = event.results[event.results.length - 1];
-    appendTranscript(result[0].transcript);
+  chatRecognition = buildRecognition({
+    onTranscript: (transcript) => {
+      appendTranscript(transcript);
+    },
+    onEnd: () => {
+      setChatListeningState(false);
+    },
   });
 
-  recognition.addEventListener("end", () => {
-    setListeningState(false);
+  voiceRecognition = buildRecognition({
+    onTranscript: async (transcript) => {
+      voiceTranscriptText.textContent = transcript.trim();
+      if (activeMode !== "voice") return;
+
+      // Auto-send transcript as a user message in voice mode.
+      stopAllRecognition();
+      await sendMessage(transcript.trim(), { speakReply: voiceAutoSpeakToggle.checked });
+
+      // If the user left voice listening ON, resume after speaking finishes.
+      if (activeMode === "voice" && isVoiceListening) {
+        // no-op: state isVoiceListening is already false because we stopped all
+      }
+    },
+    onEnd: () => {
+      // If we ended because of normal recognition end, only flip state.
+      setVoiceListeningState(false);
+    },
   });
 
-  recognition.addEventListener("error", () => {
-    setListeningState(false);
-  });
-
-  setListeningState(false);
+  setChatListeningState(false);
+  setVoiceListeningState(false);
 }
 
-async function sendMessage(prompt) {
+function setMode(nextMode) {
+  activeMode = nextMode;
+  chatModeButton.classList.toggle("active", nextMode === "chat");
+  voiceModeButton.classList.toggle("active", nextMode === "voice");
+
+  stopAllRecognition();
+  stopSpeaking();
+
+  const isVoice = nextMode === "voice";
+  voicePanel.hidden = !isVoice;
+  messagesEl.hidden = isVoice;
+  chatForm.hidden = isVoice;
+  chatPanel.classList.toggle("voice-active", isVoice);
+
+  if (isVoice) {
+    voiceStatusText.textContent = "Idle";
+    voiceTranscriptText.textContent = "—";
+  }
+}
+
+async function sendMessage(prompt, { speakReply = false } = {}) {
   sendButton.disabled = true;
   messageInput.disabled = true;
 
@@ -150,9 +324,15 @@ async function sendMessage(prompt) {
     });
 
     const data = await response.json();
-    messages[thinkingIndex].content = response.ok
+    const replyText = response.ok
       ? data.reply
       : data.detail || "The selected model could not answer right now.";
+    messages[thinkingIndex].content = replyText;
+
+    if (activeMode === "voice" && speakReply && response.ok) {
+      // Some browsers require a user gesture to start speech synthesis.
+      speak(replyText);
+    }
   } catch (error) {
     messages[thinkingIndex].content = error.message;
   } finally {
@@ -192,19 +372,40 @@ clearButton.addEventListener("click", () => {
 });
 
 micButton.addEventListener("click", () => {
-  if (!recognition) {
+  if (!chatRecognition) {
     return;
   }
 
-  if (isListening) {
-    recognition.stop();
-    setListeningState(false);
+  if (isChatListening) {
+    chatRecognition.stop();
+    setChatListeningState(false);
     return;
   }
 
-  recognition.start();
-  setListeningState(true);
+  stopAllRecognition();
+  chatRecognition.start();
+  setChatListeningState(true);
 });
+
+voiceListenButton.addEventListener("click", () => {
+  if (!voiceRecognition) {
+    return;
+  }
+
+  if (isVoiceListening) {
+    voiceRecognition.stop();
+    setVoiceListeningState(false);
+    return;
+  }
+
+  stopAllRecognition();
+  voiceTranscriptText.textContent = "—";
+  setVoiceListeningState(true);
+  voiceRecognition.start();
+});
+
+chatModeButton.addEventListener("click", () => setMode("chat"));
+voiceModeButton.addEventListener("click", () => setMode("voice"));
 
 modelSelect.addEventListener("change", updateSessionModel);
 temperatureInput.addEventListener("input", updateTemperatureValue);
@@ -213,7 +414,9 @@ maxTokensInput.addEventListener("input", updateMaxTokensValue);
 renderMessages();
 updateTemperatureValue();
 updateMaxTokensValue();
-setupVoiceInput();
+setupVoiceWave();
+setupVoiceAndChatInput();
+setMode("chat");
 loadModels().catch((error) => {
   addMessage("system", error.message);
 });

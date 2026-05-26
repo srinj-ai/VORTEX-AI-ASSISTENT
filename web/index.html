@@ -43,8 +43,8 @@
         </label>
 
         <nav class="mode-list" aria-label="Modes">
-          <button class="mode-button active" type="button">Chat Mode</button>
-          <button class="mode-button" type="button" disabled>Voice Mode</button>
+          <button id="chatModeButton" class="mode-button active" type="button">Chat Mode</button>
+          <button id="voiceModeButton" class="mode-button" type="button">Voice Mode</button>
         </nav>
 
         <button id="clearButton" class="secondary-button" type="button">Clear chat</button>
@@ -58,6 +58,34 @@
         </header>
 
         <div id="messages" class="messages"></div>
+
+        <section id="voicePanel" class="voice-panel" aria-label="Voice mode" hidden>
+          <header class="voice-header">
+            <div class="voice-title">
+              <strong>Voice Mode</strong>
+              <span id="voiceSupportHint" class="voice-hint"></span>
+            </div>
+
+            <label class="voice-toggle">
+              <input id="voiceAutoSpeakToggle" type="checkbox" checked>
+              <span>Speak AI replies</span>
+            </label>
+          </header>
+
+          <div class="voice-body">
+            <div id="voiceWave" class="voice-wave" aria-hidden="true"></div>
+
+            <button id="voiceListenButton" class="voice-listen-button" type="button" aria-label="Start or stop listening">
+              <span class="voice-listen-icon" aria-hidden="true"></span>
+              <span id="voiceListenLabel">Start listening</span>
+            </button>
+
+            <div class="voice-status" role="status" aria-live="polite">
+              <div><span class="voice-status-label">Status</span> <strong id="voiceStatusText">Idle</strong></div>
+              <div><span class="voice-status-label">Last transcript</span> <span id="voiceTranscriptText" class="voice-transcript">—</span></div>
+            </div>
+          </div>
+        </section>
 
         <form id="chatForm" class="composer">
           <div class="composer-actions" aria-hidden="true">
