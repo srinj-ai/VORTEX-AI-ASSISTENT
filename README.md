@@ -19,8 +19,8 @@ An AI chatbot with a pure Python CLI and a FastAPI text API. It uses free OpenRo
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/srinj-ai/VORTEX-AI
-cd VORTEX-AI
+git clone https://github.com/srinj-ai/VORTEX-AI-ASSISTENT
+cd VORTEX-AI-ASSISTENT
 ```
 
 ### 2. Install Dependencies
@@ -110,4 +110,4 @@ MIT License
 
 - API built with [FastAPI](https://fastapi.tiangolo.com/)
 - APIs supplied by [OpenRouter](https://openrouter.ai)
-- AI model integration by [Utkarsh Gyan](https://github.com/UTGyan7)
+- AI model integration by [Srinjoy Das](https://github.com/srinj-ai)
