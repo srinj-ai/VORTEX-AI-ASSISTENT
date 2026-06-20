@@ -1,3 +1,5 @@
+import os
+import re
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
@@ -31,6 +33,37 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+
+
+ALLOWED_WEBSITES = {
+    "youtube": "https://www.youtube.com",
+    "google": "https://www.google.com",
+    "github": "https://github.com/srinj-ai/VORTEX-AI-ASSISTENT",
+    "gmail": "https://mail.gmail.com",
+    "chatgpt": "https://chatgpt.com",
+}
+
+
+def get_latest_user_message(messages: list[ChatMessage]) -> str:
+    for message in reversed(messages):
+        if message.role == "user":
+            return message.content.strip()
+    return ""
+
+
+def open_website_command(prompt: str) -> str | None:
+    match = re.fullmatch(r"open\s+([a-z0-9 ._-]+)", prompt.lower())
+    if not match:
+        return None
+
+    site_name = match.group(1).strip().replace(" ", "")
+    url = ALLOWED_WEBSITES.get(site_name)
+    if not url:
+        allowed = ", ".join(sorted(ALLOWED_WEBSITES))
+        return f"I can open these websites right now: {allowed}."
+
+    os.startfile(url)
+    return f"Opened {site_name.title()}."
 
 
 def friendly_error(raw_error: str) -> tuple[int, str]:
@@ -84,6 +117,10 @@ def get_models() -> dict[str, list[dict[str, str]]]:
 def chat(request: ChatRequest) -> ChatResponse:
     if request.model not in AVAILABLE_MODELS.values():
         raise HTTPException(status_code=400, detail="Unknown model ID.")
+
+    local_reply = open_website_command(get_latest_user_message(request.messages))
+    if local_reply:
+        return ChatResponse(reply=local_reply)
 
     messages = [message.model_dump() for message in request.messages]
     reply = generate_response(request.model, messages, request.temperature, request.max_tokens)
