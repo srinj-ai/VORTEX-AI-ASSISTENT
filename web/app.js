@@ -1,5 +1,5 @@
 /**
- * VORTEX AI — web chat UI
+ * web chat UI
  *
  * Chat and voice modes share the same message history and /chat API.
  * Voice uses the browser's SpeechRecognition and speechSynthesis APIs.
@@ -7,13 +7,16 @@
 
 // --- DOM references ---
 
+// header elements
 const modelSelect = document.querySelector("#modelSelect");
 const sessionModel = document.querySelector("#sessionModel");
+// message list element
 const messagesEl = document.querySelector("#messages");
 const chatForm = document.querySelector("#chatForm");
 const messageInput = document.querySelector("#messageInput");
 const sendButton = document.querySelector("#sendButton");
 const micButton = document.querySelector(".mic-button");
+// cht settings elements
 const clearButton = document.querySelector("#clearButton");
 const temperatureInput = document.querySelector("#temperatureInput");
 const temperatureValue = document.querySelector("#temperatureValue");
@@ -21,6 +24,7 @@ const maxTokensInput = document.querySelector("#maxTokensInput");
 const maxTokensValue = document.querySelector("#maxTokensValue");
 const chatModeButton = document.querySelector("#chatModeButton");
 const voiceModeButton = document.querySelector("#voiceModeButton");
+// voice mode elements
 const voicePanel = document.querySelector("#voicePanel");
 const voiceListenButton = document.querySelector("#voiceListenButton");
 const voiceListenLabel = document.querySelector("#voiceListenLabel");
@@ -28,13 +32,14 @@ const voiceStatusText = document.querySelector("#voiceStatusText");
 const voiceTranscriptText = document.querySelector("#voiceTranscriptText");
 const voiceAutoSpeakToggle = document.querySelector("#voiceAutoSpeakToggle");
 const voiceSupportHint = document.querySelector("#voiceSupportHint");
+// chat panel elements
 const chatPanel = document.querySelector(".chat-panel");
 const voiceWave = document.querySelector("#voiceWave");
 
 // --- App state ---
 
 const systemPrompt =
-  "You are VORTEX AI, a helpful, concise assistant. You were developed by Srinjoy Das and Utkarsh Gyan and designed by Pratyush Roy.";
+  "You are VORTEX AI, a helpful, universal assistant. You were developed by Srinjoy Das.";
 
 /** @type {{ role: string, content: string }[]} */
 const messages = [];

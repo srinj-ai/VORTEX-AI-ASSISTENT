@@ -1,5 +1,5 @@
 """
-AI model helpers — env loading, OpenRouter client, and response generation.
+
 
 Models are read from models.csv at import time so both the API and CLI share
 the same list.
@@ -21,7 +21,6 @@ def load_env_file() -> None:
     """
     Load key=value pairs from .env into os.environ.
 
-    Existing environment variables are left unchanged (setdefault).
     """
     if not ENV_PATH.exists():
         return
@@ -41,7 +40,7 @@ load_env_file()
 
 
 def get_api_key() -> str:
-    """Prefer OpenRouter; fall back to a plain OpenAI key if set."""
+    """Prefer OpenRouter; fall back to a plain OpenAI key if set....."""
     return os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
 
 
@@ -49,7 +48,7 @@ def get_client():
     """
     Build an OpenAI-compatible client pointed at OpenRouter.
 
-    Raises ValueError when no API key is configured.
+    give a ValueError when no API key is configured.
     """
     api_key = get_api_key()
     if not api_key:

@@ -1,5 +1,5 @@
 """
-VORTEX AI — FastAPI backend.
+FastAPI backend.
 
 Serves the web UI, exposes model list and chat endpoints, and handles a few
 local shortcuts (like opening allowed websites) before calling the AI provider.

@@ -1,6 +1,5 @@
 """
 VORTEX AI — terminal chat client.
-
 Pick a model once, then chat in a loop until you type exit/quit or clear history.
 """
 
