@@ -1,3 +1,12 @@
+/**
+ * VORTEX AI — web chat UI
+ *
+ * Chat and voice modes share the same message history and /chat API.
+ * Voice uses the browser's SpeechRecognition and speechSynthesis APIs.
+ */
+
+// --- DOM references ---
+
 const modelSelect = document.querySelector("#modelSelect");
 const sessionModel = document.querySelector("#sessionModel");
 const messagesEl = document.querySelector("#messages");
@@ -22,15 +31,24 @@ const voiceSupportHint = document.querySelector("#voiceSupportHint");
 const chatPanel = document.querySelector(".chat-panel");
 const voiceWave = document.querySelector("#voiceWave");
 
-const systemPrompt = "You are VORTEX AI, a helpful, concise assistant. You were developed by Srinjoy Das and Utkarsh Gyan and designed by Pratyush Roy.";
+// --- App state ---
+
+const systemPrompt =
+  "You are VORTEX AI, a helpful, concise assistant. You were developed by Srinjoy Das and Utkarsh Gyan and designed by Pratyush Roy.";
+
+/** @type {{ role: string, content: string }[]} */
 const messages = [];
+
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 let chatRecognition;
 let voiceRecognition;
 let isChatListening = false;
 let isVoiceListening = false;
 let activeMode = "chat"; // "chat" | "voice"
 let isSpeaking = false;
+
+// --- Message list ---
 
 function addMessage(role, content) {
   messages.push({ role, content });
@@ -58,6 +76,8 @@ function renderMessages() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
+// --- Model picker ---
+
 async function loadModels() {
   const response = await fetch("/models");
   if (!response.ok) {
@@ -82,6 +102,8 @@ function updateSessionModel() {
   sessionModel.textContent = selected ? selected.textContent : "Select a model";
 }
 
+// --- Settings display ---
+
 function updateTemperatureValue() {
   temperatureValue.textContent = Number(temperatureInput.value).toFixed(1);
 }
@@ -93,6 +115,8 @@ function updateMaxTokensValue() {
 function resizeComposer() {
   messageInput.style.height = "";
 }
+
+// --- Voice UI state ---
 
 function setChatListeningState(nextIsListening) {
   isChatListening = nextIsListening;
@@ -116,6 +140,7 @@ function appendTranscript(transcript) {
   messageInput.focus();
 }
 
+/** Build the animated waveform bars shown during speech output. */
 function setupVoiceWave() {
   if (!voiceWave) return;
 
@@ -127,6 +152,7 @@ function setupVoiceWave() {
     const bar = document.createElement("span");
     bar.className = "voice-wave-bar";
 
+    // Taller bars in the center, shorter at the edges
     const midpoint = (totalBars - 1) / 2;
     const distance = Math.abs(index - midpoint) / midpoint;
     const profile = 1 - Math.pow(distance, 1.2);
@@ -146,6 +172,10 @@ function setWaveSpeakingState(isActive) {
   voiceWave.classList.toggle("speaking", isActive);
 }
 
+/**
+ * Create a one-shot speech recognition instance.
+ * @param {{ onTranscript: (text: string) => void, onEnd: () => void }} handlers
+ */
 function buildRecognition({ onTranscript, onEnd }) {
   const instance = new SpeechRecognition();
   instance.continuous = false;
@@ -154,7 +184,8 @@ function buildRecognition({ onTranscript, onEnd }) {
 
   instance.addEventListener("result", (event) => {
     const result = event.results[event.results.length - 1];
-    const transcript = (result && result[0] && result[0].transcript) ? result[0].transcript : "";
+    const transcript =
+      result && result[0] && result[0].transcript ? result[0].transcript : "";
     if (transcript) {
       onTranscript(transcript);
     }
@@ -172,8 +203,12 @@ function buildRecognition({ onTranscript, onEnd }) {
 }
 
 function stopAllRecognition() {
-  try { chatRecognition && chatRecognition.stop(); } catch {}
-  try { voiceRecognition && voiceRecognition.stop(); } catch {}
+  try {
+    chatRecognition && chatRecognition.stop();
+  } catch {}
+  try {
+    voiceRecognition && voiceRecognition.stop();
+  } catch {}
   setChatListeningState(false);
   setVoiceListeningState(false);
 }
@@ -242,6 +277,7 @@ function setupVoiceAndChatInput() {
     voiceSupportHint.textContent = "Uses free browser speech APIs.";
   }
 
+  // Mic in chat mode: append transcript to the text box
   chatRecognition = buildRecognition({
     onTranscript: (transcript) => {
       appendTranscript(transcript);
@@ -251,12 +287,12 @@ function setupVoiceAndChatInput() {
     },
   });
 
+  // Voice mode: send transcript directly as a message
   voiceRecognition = buildRecognition({
     onTranscript: async (transcript) => {
       voiceTranscriptText.textContent = transcript.trim();
       if (activeMode !== "voice") return;
 
-      // Auto-send transcript as a user message in voice mode.
       stopAllRecognition();
       await sendMessage(transcript.trim(), { speakReply: voiceAutoSpeakToggle.checked });
 
@@ -266,7 +302,6 @@ function setupVoiceAndChatInput() {
       }
     },
     onEnd: () => {
-      // If we ended because of normal recognition end, only flip state.
       setVoiceListeningState(false);
     },
   });
@@ -294,6 +329,8 @@ function setMode(nextMode) {
     voiceTranscriptText.textContent = "—";
   }
 }
+
+// --- Chat API ---
 
 async function sendMessage(prompt, { speakReply = false } = {}) {
   sendButton.disabled = true;
@@ -342,6 +379,8 @@ async function sendMessage(prompt, { speakReply = false } = {}) {
     messageInput.focus();
   }
 }
+
+// --- Event listeners ---
 
 chatForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -410,6 +449,8 @@ voiceModeButton.addEventListener("click", () => setMode("voice"));
 modelSelect.addEventListener("change", updateSessionModel);
 temperatureInput.addEventListener("input", updateTemperatureValue);
 maxTokensInput.addEventListener("input", updateMaxTokensValue);
+
+// --- Boot ---
 
 renderMessages();
 updateTemperatureValue();

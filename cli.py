@@ -1,7 +1,14 @@
+"""
+VORTEX AI — terminal chat client.
+
+Pick a model once, then chat in a loop until you type exit/quit or clear history.
+"""
+
 from utils.ai_models import AVAILABLE_MODELS, generate_response, get_api_key
 
 
 def choose_model() -> tuple[str, str]:
+    """Show numbered models and return the chosen (display name, model id) pair."""
     model_items = list(AVAILABLE_MODELS.items())
     if not model_items:
         raise SystemExit("No models found. Check models.csv and try again.")
@@ -20,6 +27,7 @@ def choose_model() -> tuple[str, str]:
 
 
 def print_key_hint() -> None:
+    """Warn once at startup if no API key is configured."""
     if get_api_key():
         return
     print(
@@ -36,15 +44,18 @@ def main() -> None:
     print(f"\nUsing {model_name}.")
     print_key_hint()
 
+    # Full conversation history sent to the model on each turn
     messages: list[dict[str, str]] = []
 
     while True:
         prompt = input("\nYou: ").strip()
         if not prompt:
             continue
+
         if prompt.lower() in {"exit", "quit"}:
             print("Goodbye.")
             break
+
         if prompt.lower() == "clear":
             messages.clear()
             print("Chat history cleared.")

@@ -1,3 +1,10 @@
+"""
+VORTEX AI — FastAPI backend.
+
+Serves the web UI, exposes model list and chat endpoints, and handles a few
+local shortcuts (like opening allowed websites) before calling the AI provider.
+"""
+
 import os
 import re
 from typing import Literal
@@ -16,7 +23,11 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Static assets (HTML, CSS, JS) live under /static
 app.mount("/static", StaticFiles(directory="web"), name="static")
+
+
+# --- Request / response shapes ---
 
 
 class ChatMessage(BaseModel):
@@ -35,6 +46,7 @@ class ChatResponse(BaseModel):
     reply: str
 
 
+# Sites the user can open with a plain-text command (e.g. "open youtube")
 ALLOWED_WEBSITES = {
     "youtube": "https://www.youtube.com",
     "google": "https://www.google.com",
@@ -45,6 +57,7 @@ ALLOWED_WEBSITES = {
 
 
 def get_latest_user_message(messages: list[ChatMessage]) -> str:
+    """Return the most recent user message, or an empty string if none exist."""
     for message in reversed(messages):
         if message.role == "user":
             return message.content.strip()
@@ -52,21 +65,32 @@ def get_latest_user_message(messages: list[ChatMessage]) -> str:
 
 
 def open_website_command(prompt: str) -> str | None:
+    """
+    If the prompt is an "open <site>" command, launch the site and return a reply.
+
+    Returns None when the prompt is not an open command, so the caller can fall
+    through to the AI model instead.
+    """
     match = re.fullmatch(r"open\s+([a-z0-9 ._-]+)", prompt.lower())
     if not match:
         return None
 
+    # Normalize "google mail" style names to a single lookup key
     site_name = match.group(1).strip().replace(" ", "")
     url = ALLOWED_WEBSITES.get(site_name)
     if not url:
         allowed = ", ".join(sorted(ALLOWED_WEBSITES))
         return f"I can open these websites right now: {allowed}."
 
+    # Windows-only: opens the default browser
     os.startfile(url)
     return f"Opened {site_name.title()}."
 
 
 def friendly_error(raw_error: str) -> tuple[int, str]:
+    """
+    Map raw provider errors to an HTTP status code and a user-facing message.
+    """
     error_text = raw_error.lower()
 
     if "429" in error_text or "rate-limited" in error_text or "rate limit" in error_text:
@@ -93,18 +117,24 @@ def friendly_error(raw_error: str) -> tuple[int, str]:
     )
 
 
+# --- Routes ---
+
+
 @app.get("/")
 def home() -> FileResponse:
+    """Serve the main chat page."""
     return FileResponse("web/index.html")
 
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
+    """Simple liveness check for deployments and dev tools."""
     return {"status": "ok"}
 
 
 @app.get("/models")
 def get_models() -> dict[str, list[dict[str, str]]]:
+    """Return every model loaded from models.csv."""
     return {
         "models": [
             {"name": name, "id": model_id}
@@ -115,15 +145,22 @@ def get_models() -> dict[str, list[dict[str, str]]]:
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
+    """
+    Handle a chat turn: local shortcuts first, then the selected AI model.
+    """
     if request.model not in AVAILABLE_MODELS.values():
         raise HTTPException(status_code=400, detail="Unknown model ID.")
 
-    local_reply = open_website_command(get_latest_user_message(request.messages))
+    # Handle "open youtube" style commands without calling the API
+    latest_prompt = get_latest_user_message(request.messages)
+    local_reply = open_website_command(latest_prompt)
     if local_reply:
         return ChatResponse(reply=local_reply)
 
     messages = [message.model_dump() for message in request.messages]
-    reply = generate_response(request.model, messages, request.temperature, request.max_tokens)
+    reply = generate_response(
+        request.model, messages, request.temperature, request.max_tokens
+    )
 
     if reply.startswith("Error generating response:"):
         status_code, detail = friendly_error(reply)

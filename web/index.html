@@ -4,15 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>VORTEX AI</title>
+    <!-- Cache-bust query keeps CSS fresh during development -->
     <link rel="stylesheet" href="/static/style.css?v=fixed-typing-area">
   </head>
   <body>
     <main class="app-shell">
+      <!-- Left column: model picker, generation settings, mode switch -->
       <aside class="sidebar">
         <div class="brand">
           <img class="brand-image" src="/static/assets/vortex-logo.png" alt="VORTEX AI">
         </div>
 
+        <!-- Populated by app.js via GET /models -->
         <label class="field">
           <span>Select model</span>
           <select id="modelSelect"></select>
@@ -50,6 +53,7 @@
         <button id="clearButton" class="secondary-button" type="button">Clear chat</button>
       </aside>
 
+      <!-- Right column: chat transcript or voice UI + message composer -->
       <section class="chat-panel" aria-label="Chat">
         <header class="session-bar">
           <span>Session:</span>
@@ -57,8 +61,10 @@
           <button class="dots-button" type="button" aria-label="More options">...</button>
         </header>
 
+        <!-- Message bubbles rendered by app.js -->
         <div id="messages" class="messages"></div>
 
+        <!-- Shown in voice mode; hidden attribute toggled in app.js -->
         <section id="voicePanel" class="voice-panel" aria-label="Voice mode" hidden>
           <header class="voice-header">
             <div class="voice-title">
@@ -73,6 +79,7 @@
           </header>
 
           <div class="voice-body">
+            <!-- Animated bars injected by setupVoiceWave() in app.js -->
             <div id="voiceWave" class="voice-wave" aria-hidden="true"></div>
 
             <button id="voiceListenButton" class="voice-listen-button" type="button" aria-label="Start or stop listening">
@@ -87,6 +94,7 @@
           </div>
         </section>
 
+        <!-- Hidden in voice mode so only the voice panel is visible -->
         <form id="chatForm" class="composer">
           <div class="composer-actions" aria-hidden="true">
             <span>+</span>
