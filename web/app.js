@@ -10,6 +10,7 @@
 // header elements
 const modelSelect = document.querySelector("#modelSelect");
 const sessionModel = document.querySelector("#sessionModel");
+const apiKeyInput = document.querySelector("#apiKeyInput");
 // message list element
 const messagesEl = document.querySelector("#messages");
 const chatForm = document.querySelector("#chatForm");
@@ -35,6 +36,8 @@ const voiceSupportHint = document.querySelector("#voiceSupportHint");
 // chat panel elements
 const chatPanel = document.querySelector(".chat-panel");
 const voiceWave = document.querySelector("#voiceWave");
+
+const API_KEY_STORAGE_KEY = "vortex_openrouter_api_key";
 
 // --- App state ---
 
@@ -115,6 +118,14 @@ function updateTemperatureValue() {
 
 function updateMaxTokensValue() {
   maxTokensValue.textContent = maxTokensInput.value;
+}
+
+function loadStoredApiKey() {
+  apiKeyInput.value = localStorage.getItem(API_KEY_STORAGE_KEY) || "";
+}
+
+function saveApiKey() {
+  localStorage.setItem(API_KEY_STORAGE_KEY, apiKeyInput.value.trim());
 }
 
 function resizeComposer() {
@@ -351,6 +362,7 @@ async function sendMessage(prompt, { speakReply = false } = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: modelSelect.value,
+        api_key: apiKeyInput.value.trim() || null,
         temperature: Number(temperatureInput.value),
         max_tokens: Number(maxTokensInput.value),
         messages: [
@@ -415,6 +427,8 @@ clearButton.addEventListener("click", () => {
   messageInput.focus();
 });
 
+apiKeyInput.addEventListener("input", saveApiKey);
+
 micButton.addEventListener("click", () => {
   if (!chatRecognition) {
     return;
@@ -460,6 +474,7 @@ maxTokensInput.addEventListener("input", updateMaxTokensValue);
 renderMessages();
 updateTemperatureValue();
 updateMaxTokensValue();
+loadStoredApiKey();
 setupVoiceWave();
 setupVoiceAndChatInput();
 setMode("chat");

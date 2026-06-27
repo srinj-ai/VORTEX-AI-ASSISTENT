@@ -65,6 +65,16 @@ def get_client():
     )
 
 
+def get_client_with_key(api_key: str):
+    """Build a client using a caller-supplied key from the UI."""
+    from openai import OpenAI
+
+    return OpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
+
+
 def load_models() -> Dict[str, str]:
     """
     Read models.csv into a dict of {display name: model id}.
@@ -93,6 +103,7 @@ def generate_response(
     messages: List[Dict],
     temperature: float = 0.7,
     max_tokens: int = 1000,
+    api_key: str | None = None,
 ) -> str:
     """
     Send messages to the selected model and return the assistant reply.
@@ -101,7 +112,7 @@ def generate_response(
     so callers (API vs CLI) can decide how to present the error.
     """
     try:
-        client = get_client()
+        client = get_client_with_key(api_key) if api_key else get_client()
         response = client.chat.completions.create(
             extra_headers={
                 # OpenRouter attribution headers

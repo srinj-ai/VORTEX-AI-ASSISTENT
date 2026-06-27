@@ -118,7 +118,18 @@ textarea {
   text-transform: uppercase;
 }
 
+.key-field {
+  gap: 6px;
+}
+
+.key-field small {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: none;
+}
+
 select,
+input[type="password"],
 textarea {
   width: 100%;
   color: var(--text);
@@ -129,6 +140,12 @@ textarea {
 }
 
 select {
+  min-height: 56px;
+  padding: 0 18px;
+  box-shadow: inset 0 0 18px rgba(68, 179, 226, 0.08);
+}
+
+input[type="password"] {
   min-height: 56px;
   padding: 0 18px;
   box-shadow: inset 0 0 18px rgba(68, 179, 226, 0.08);
@@ -162,6 +179,7 @@ textarea {
 }
 
 select:focus,
+input[type="password"]:focus,
 textarea:focus {
   border-color: var(--accent);
 }

@@ -38,6 +38,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     model: str
     messages: list[ChatMessage] = Field(min_length=1)
+    api_key: str | None = Field(default=None, min_length=1)
     temperature: float = Field(default=0.7, ge=0, le=2)
     max_tokens: int = Field(default=1000, ge=100, le=4000)
 
@@ -159,7 +160,11 @@ def chat(request: ChatRequest) -> ChatResponse:
 
     messages = [message.model_dump() for message in request.messages]
     reply = generate_response(
-        request.model, messages, request.temperature, request.max_tokens
+        request.model,
+        messages,
+        request.temperature,
+        request.max_tokens,
+        request.api_key,
     )
 
     if reply.startswith("Error generating response:"):
